@@ -5,8 +5,6 @@ if ( ! defined('_TB_VERSION_')) {
 
 require_once _PS_MODULE_DIR_.'productvideos/vendor/autoload.php';
 
-use MediaEmbed;
-
 class ProductVideos extends Module
 {
     /* @var boolean error */
