@@ -3,6 +3,9 @@ if ( ! defined('_TB_VERSION_')) {
     exit;
 }
 
+require_once _PS_MODULE_DIR_.'productvideos/vendor/autoload.php';
+
+use MediaEmbed;
 
 class ProductVideos extends Module
 {
@@ -201,6 +204,12 @@ class ProductVideos extends Module
      */
     private function addEmbeddCode($video)
     {
+        if (!isset($this->MediaEmbed)) {
+            $this->MediaEmbed = new MediaEmbed\MediaEmbed();
+        }
+        $MediaObject = $this->MediaEmbed->parseUrl($video['url']);
+
+        $video['embedCode'] = $MediaObject->getEmbedCode();
         return $video;
     }
 
