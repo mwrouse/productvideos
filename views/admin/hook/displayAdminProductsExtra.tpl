@@ -76,9 +76,11 @@
             return;
         }
 
-        var html = '<tr><td><input type="text" value="" class="form-control" name="video_titles[]"/></td><td><input type="text" value="" class="form-control" name="video_urls[]"/></td><td class="delete"><i class="process-icon-delete" title="{l s="Remove Video"}" onclick="deleteVideo(event)"></i></td></tr>';
+        var html = '<td><input type="text" value="" class="form-control" name="video_titles[]"/></td><td><input type="text" value="" class="form-control" name="video_urls[]"/></td><td class="delete"><i class="process-icon-delete" title="{l s="Remove Video"}" onclick="deleteVideo(event)"></i></td>';
+        var el = document.createElement('tr');
+        el.innerHTML = html;
 
-        container.innerHTML += html;
+        container.appendChild(el);
     }
 
     function deleteVideo(e) {
@@ -103,8 +105,14 @@
             if (videoIdInput != null)
                 videoId = videoIdInput.value;
 
-            if (videoId != null)
-                deletedContainer.innerHTML += '<input type="hidden" value="' + videoId + '" name="deleted_videos[]"/>';
+            if (videoId != null) {
+                var el = document.createElement('input');
+                el.setAttribute('type', 'hidden');
+                el.setAttribute('value', videoId);
+                el.setAttribute('name', 'deleted_videos[]');
+
+                deletedContainer.appendChild(el);
+            }
 
             container.removeChild(row);
         }

@@ -210,13 +210,128 @@ class ProductVideos extends Module
         }
 
         $MediaObject = $this->MediaEmbed->parseUrl($video['url']);
-        $MediaObject->setAttribute('style', 'width:100%');
-        $MediaObject->setAttribute('width', '560');
-        $MediaObject->setAttribute('height', '600');
 
+        $attributes = $this->getSavedAttributes();
+        foreach ($attributes as $attr) {
+            $MediaObject->setAttribute($attr['name'], $attr['value']);
+        }
         $video['embed'] = $MediaObject->getEmbedCode();
         return $video;
     }
+
+
+
+
+    /**********************
+     * Module Config Page *
+     **********************/
+
+
+    /**
+     * @return string
+     *
+     * @since 1.0.0
+     */
+    public function getContent()
+    {
+        try {
+            $content = $this->postProcess();
+
+            $baseLink = AdminController::$currentIndex.'&token=' . $_GET['token'] . '&module_name=' . $this->name;
+
+            $this->context->smarty->assign([
+                    'attributes' => $this->getSavedAttributes(),
+                    'post_action' => $baseLink.'&configure='.$this->name
+            ]);
+
+            $content .= $this->display(__FILE__, 'views/admin/config.tpl');
+
+            return $content;
+        } catch (Exception $e) {
+            $this->context->controller->errors[] = $e->getMessage();
+
+            return '';
+        }
+    }
+
+
+    /**
+     * @return bool|string
+     *
+     * @since 1.0.0
+     * @throws PrestaShopException
+     * @throws HTMLPurifier_Exception
+     */
+    public function postProcess()
+    {
+        if (Tools::isSubmit('submitStoreConf') ) {
+            $languages = Language::getLanguages(false);
+            $values = [];
+            $updateImagesValues = false;
+
+            $names = Tools::getValue('attribute_names');
+            $values = Tools::getValue('attribute_values');
+
+            if (!is_array($names))
+                $names = [$names];
+            if (!is_array($values))
+                $values = [$values];
+
+            $max = count($names);
+            if (count($values) < $max)
+                $max = count($values);
+
+            $final = [];
+
+            for ($i = 0; $i < $max; $i++) {
+                array_push($final, [
+                    'name' => $names[$i],
+                    'value' => $values[$i]
+                ]);
+            }
+
+            Configuration::updateValue('video_attributes', serialize($final), true);
+
+            return $this->displayConfirmation($this->l('The attributes have been updated.'));
+        }
+
+        return '';
+    }
+
+    /**
+     * @return array
+     *
+     * @since 1.0.0
+     * @throws PrestaShopException
+     */
+    public function getSavedAttributes()
+    {
+        try {
+            $savedAttributes = Configuration::get('video_attributes');
+            if (!isset($savedAttributes))
+                return [];
+
+            $result = unserialize($savedAttributes);
+
+            if (!is_array($result))
+                return [];
+
+
+
+            return $result;
+        }
+        catch (Exception $e) {
+            Logger::addLog("ProductVideos hook error: {$e->getMessage()}");
+            return [];
+        }
+    }
+
+
+
+    /***************************
+     * Installing/Uninstalling *
+     ***************************/
+
 
 
     public function install()
@@ -232,6 +347,8 @@ class ProductVideos extends Module
                 return false;
             }
         }
+
+        Configuration::updateValue('video_attributes', [], true);
 
         return true;
     }
