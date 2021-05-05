@@ -105,6 +105,9 @@ class ProductVideos extends Module
 
             $this->removeVideos($deleted_videos);
 
+            if (!is_array($video_titles) || !is_array($video_urls))
+                return;
+
             $max = count($video_titles);
             if (count($video_urls) < $max)
                 $max = count($video_urls);
@@ -184,7 +187,7 @@ class ProductVideos extends Module
      */
     public function removeVideos($videoIds)
     {
-        if (!is_array($videoIds))
+        if (!is_array($videoIds) || count($videoIds) == 0)
             return;
 
         foreach ($videoIds as $videoId)
