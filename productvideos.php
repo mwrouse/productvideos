@@ -237,7 +237,7 @@ class ProductVideos extends Module
         try {
             $content = $this->postProcess();
 
-            $baseLink = AdminController::$currentIndex.'&token=' . $_GET['token'] . '&module_name=' . $this->name;
+            $baseLink = AdminController::$currentIndex.'&token=' . Tools::getAdminTokenLite('AdminModules') . '&module_name=' . $this->name;
 
             $this->context->smarty->assign([
                     'attributes' => $this->getSavedAttributes(),
