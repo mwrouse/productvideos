@@ -3,7 +3,7 @@ ThirtyBees module for adding videos to your product (shows up in a product tab)
 
 
 ## Hooks
-This ties into the `displayProductTabContent` hook tab to automatically display as a tab on your theme.
+This ties into the `displayProductTabContent` hook to automatically display as a tab on the page of a product.
 
 **It is expected that you will override `productvideos.tpl` to make it how your theme expects tabs**
 
