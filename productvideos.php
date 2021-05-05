@@ -207,9 +207,13 @@ class ProductVideos extends Module
         if (!isset($this->MediaEmbed)) {
             $this->MediaEmbed = new MediaEmbed\MediaEmbed();
         }
-        $MediaObject = $this->MediaEmbed->parseUrl($video['url']);
 
-        $video['embedCode'] = $MediaObject->getEmbedCode();
+        $MediaObject = $this->MediaEmbed->parseUrl($video['url']);
+        $MediaObject->setAttribute('style', 'width:100%');
+        $MediaObject->setAttribute('width', '560');
+        $MediaObject->setAttribute('height', '600');
+
+        $video['embed'] = $MediaObject->getEmbedCode();
         return $video;
     }
 
