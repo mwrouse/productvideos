@@ -16,6 +16,9 @@ class ProductVideos extends Module
         'ProductVideos' => 'ProductVideos', // class => label
     ];
 
+    const ENABLE_TAB_HOOK = "productvideos_enable_tabhook";
+
+
     public function __construct()
     {
         $this->name = 'productvideos';
@@ -63,6 +66,10 @@ class ProductVideos extends Module
      */
     public function hookDisplayProductTabContent($params)
     {
+        $isEnabled = $this->isProductTabHookEnabled();
+        if (!$isEnabled)
+            return;
+
         $product = $params['product'];
         if (!isset($product) || !isset($product->id))
             return;
@@ -81,7 +88,6 @@ class ProductVideos extends Module
         $productId = Tools::getValue('id_product');
         if (!isset($productId))
             return "Could not load Product ID from Tools::getValue('id_product')";
-
 
         return $this->display(__FILE__, 'views/admin/hook/displayAdminProductsExtra.tpl');
     }
@@ -251,6 +257,7 @@ class ProductVideos extends Module
 
             $this->context->smarty->assign([
                     'attributes' => $this->getSavedAttributes(),
+                    'enabled' => $this->isProductTabHookEnabled(),
                     'post_action' => $baseLink.'&configure='.$this->name
             ]);
 
@@ -302,6 +309,9 @@ class ProductVideos extends Module
 
             Configuration::updateValue('video_attributes', serialize($final), true);
 
+            $isEnabled = Tools::getValue(static::ENABLE_TAB_HOOK);
+            Configuration::updateValue(static::ENABLE_TAB_HOOK, $isEnabled);
+
             return $this->displayConfirmation($this->l('The attributes have been updated.'));
         }
 
@@ -326,13 +336,30 @@ class ProductVideos extends Module
             if (!is_array($result))
                 return [];
 
-
-
             return $result;
         }
         catch (Exception $e) {
             Logger::addLog("ProductVideos hook error: {$e->getMessage()}");
             return [];
+        }
+    }
+
+
+    /**
+     * Checks if the product tab hook is enabled
+     */
+    public function isProductTabHookEnabled()
+    {
+        try {
+            $isEnabled = Configuration::get(static::ENABLE_TAB_HOOK);
+            if (!isset($isEnabled))
+                return true;
+
+            return $isEnabled;
+        }
+        catch (Exception $e) {
+            Logger::addLog("ProductVideos isProductTabHookEnabled error: {$e->getMessage()}");
+            return true;
         }
     }
 
@@ -359,6 +386,7 @@ class ProductVideos extends Module
         }
 
         Configuration::updateValue('video_attributes', [], true);
+        Configuration::updateValue(static::ENABLE_TAB_HOOK, true);
 
         return true;
     }

@@ -27,14 +27,30 @@
 <form method="POST" action="{$post_action}">
 <div id="product-videos-config" class="panel product-tab">
     <h3>{l s='Default Attributes'}</h3>
-    <p>Attributes here will get added to all embedded content generated for a video</p>
+
+
+    <div class="form-group" style="margin-bottom: 60px">
+        <label class="control-label col-lg-2" style="padding-left: 0">{l s='Enable Product Tab Hook'}</label>
+        <div class="col-lg-9">
+            <span class="switch prestashop-switch fixed-width-lg">
+                <input type="radio" name="productvideos_enable_tabhook" id="productvideos_enable_tabhook_on" value="1" {if $enabled}checked="checked"{/if}>
+                <label for="productvideos_enable_tabhook_on">{l s='Yes'}</label>
+
+                <input type="radio" name="productvideos_enable_tabhook" id="productvideos_enable_tabhook_off" value="0" {if !$enabled}checked="checked"{/if}>
+                <label for="productvideos_enable_tabhook_off">{l s='No'}</label>
+                <a class="slide-button btn"></a>
+            </span>
+        </div>
+    </div>
+
+    <p>{l s='Attributes here will get added to all embedded content generated for a video'}</p>
 
     <div class="form-group">
 		<table>
             <thead>
                 <tr>
-                    <th style="width:20%"><strong>Name</strong></th>
-                    <th><strong>Value</strong></th>
+                    <th style="width:20%"><strong>{l s='Attribute Name'}</strong></th>
+                    <th><strong>{l s='Attribute Value'}</strong></th>
                     <th></th>
                 </tr>
             </thead>

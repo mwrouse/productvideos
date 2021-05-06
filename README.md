@@ -7,7 +7,7 @@ This ties into the `displayProductTabContent` hook to automatically display as a
 
 **It is expected that you will override `hookDisplayProductTabContent.tpl` to make it how your theme expects tabs**
 
-If you do not want the video to be in a tab, you just need to remove the hook from the "Modules and Services" tab in the back office.
+If you do not want the video to be in a tab, you just need to go into the module configuration page and disable the product tab hook.
 
 You will then be able to use  `{hook h='displayProductVideos' product=$product}` in your theme to get the product videos anywhere in your `product.tpl` file in your theme.
 
