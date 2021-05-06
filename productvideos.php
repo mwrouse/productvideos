@@ -89,6 +89,8 @@ class ProductVideos extends Module
         if (!isset($productId))
             return "Could not load Product ID from Tools::getValue('id_product')";
 
+        $this->addVideosToSmarty($productId);
+
         return $this->display(__FILE__, 'views/admin/hook/displayAdminProductsExtra.tpl');
     }
 
@@ -147,6 +149,7 @@ class ProductVideos extends Module
         {
             $result[$i] = $this->addEmbeddCode($video);
         }
+
         return $result;
     }
 
