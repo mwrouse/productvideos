@@ -32,7 +32,7 @@ class ProductVideos extends Module
 
         // List of hooks
         $this->hooksList = [
-            'displayProductVideosTab',
+            'displayProductVideos',
             'displayProductTabContent',
             'displayAdminProductsExtra',
             'actionProductUpdate'
@@ -47,18 +47,15 @@ class ProductVideos extends Module
     /**
      * Standard Hook for displaying content
      */
-    public function hookDisplayProductVideosTab($params)
+    public function hookDisplayProductVideos($params)
     {
         $product = $params['product'];
         if (!isset($product) || !isset($product->id))
             return;
 
-        $videos = $this->getVideosForProduct($product->id);
+        $this->addVideosToSmarty($product->id);
 
-        $this->context->smarty->assign([
-            'videos' => $videos
-        ]);
-        return $this->display(__FILE__, 'productvideos.tpl');
+        return $this->display(__FILE__, 'hookDisplayProductVideos.tpl');
     }
 
     /**
@@ -66,7 +63,13 @@ class ProductVideos extends Module
      */
     public function hookDisplayProductTabContent($params)
     {
-        return $this->hookDisplayProductVideosTab($params);
+        $product = $params['product'];
+        if (!isset($product) || !isset($product->id))
+            return;
+
+        $this->addVideosToSmarty($product->id);
+
+        return $this->display(__FILE__, 'hookDisplayProductTabContent.tpl');
     }
 
 
@@ -79,11 +82,7 @@ class ProductVideos extends Module
         if (!isset($productId))
             return "Could not load Product ID from Tools::getValue('id_product')";
 
-        $videos = $this->getVideosForProduct($productId);
 
-        $this->context->smarty->assign([
-            'videos' => $videos
-        ]);
         return $this->display(__FILE__, 'views/admin/hook/displayAdminProductsExtra.tpl');
     }
 
@@ -197,6 +196,17 @@ class ProductVideos extends Module
         }
     }
 
+    /**
+     * Adds videos to smarty for the template
+     */
+    private function addVideosToSmarty($productId)
+    {
+        $videos = $this->getVideosForProduct($productId);
+
+        $this->context->smarty->assign([
+            'videos' => $videos
+        ]);
+    }
 
 
 
