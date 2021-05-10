@@ -53,10 +53,10 @@ class ProductVideos extends Module
     public function hookDisplayProductVideos($params)
     {
         $product = $params['product'];
-        if (!isset($product) || !isset($product->id))
+        if (!isset($product))
             return;
 
-        $this->addVideosToSmarty($product->id);
+        $this->addVideosToSmarty($this->get($product, 'id', 'id_product'));
 
         return $this->display(__FILE__, 'hookDisplayProductVideos.tpl');
     }
@@ -241,6 +241,19 @@ class ProductVideos extends Module
         }
         $video['embed'] = $MediaObject->getEmbedCode();
         return $video;
+    }
+
+
+
+    private function get($product, $key, $arrayKey = null)
+    {
+        if (is_null($arrayKey))
+            $arrayKey = $key;
+
+        if (is_object($product))
+            return $product->{$key};
+
+        return $product[$arrayKey];
     }
 
 
