@@ -53,7 +53,7 @@ class ProductVideos extends Module
     public function hookDisplayProductVideos($params)
     {
         $product = $params['product'];
-        if (!isset($product))
+        if (!isset($product) || is_null($product))
             return;
 
         $this->addVideosToSmarty($this->get($product, 'id', 'id_product'));
@@ -141,6 +141,9 @@ class ProductVideos extends Module
      */
     public function getVideosForProduct($productId)
     {
+        if (is_null($productId))
+            return [];
+
         $result = Db::getInstance()->ExecuteS('
             SELECT `id_video`, `id_product`, `title`, `url` FROM `'._DB_PREFIX_.$this->table_name.'` WHERE `id_product`='.$productId.';
         ');
