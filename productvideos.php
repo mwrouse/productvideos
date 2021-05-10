@@ -74,7 +74,10 @@ class ProductVideos extends Module
         if (!isset($product) || !isset($product->id))
             return;
 
-        $this->addVideosToSmarty($product->id);
+        $hasVideos = $this->addVideosToSmarty($product->id);
+
+        if (!$hasVideos)
+            return "";
 
         return $this->display(__FILE__, 'hookDisplayProductTabContent.tpl');
     }
@@ -215,6 +218,8 @@ class ProductVideos extends Module
         $this->context->smarty->assign([
             'videos' => $videos
         ]);
+
+        return count($videos) > 0;
     }
 
 
