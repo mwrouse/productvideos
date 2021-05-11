@@ -172,7 +172,7 @@ class ProductVideos extends Module
                     $this->table_name,
                     [
                         'id_product' => $productId,
-                        'title' => $video['title'],
+                        'title' => pSQL($video['title']),
                         'url' => $video['url']
                     ]
                 );
