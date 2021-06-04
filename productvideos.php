@@ -111,7 +111,7 @@ class ProductVideos extends Module
             $video_urls = Tools::getValue('video_urls');
             $deleted_videos = Tools::getValue('deleted_videos');
 
-            $this->removeVideos($deleted_videos);
+            $this->removeVideos($productId);
 
             if (!is_array($video_titles) || !is_array($video_urls))
                 return;
@@ -197,9 +197,10 @@ class ProductVideos extends Module
     /**
      * Removes all videos in the array
      */
-    public function removeVideos($videoIds)
+    public function removeVideos($productId)//$videoIds)
     {
-        if (!is_array($videoIds) || count($videoIds) == 0)
+        Db::getInstance()->delete($this->table_name, 'id_product='.$productId);
+        /*if (!is_array($videoIds) || count($videoIds) == 0)
             return;
 
         foreach ($videoIds as $videoId)
@@ -208,7 +209,7 @@ class ProductVideos extends Module
                 $this->table_name,
                 'id_video='.$videoId
             );
-        }
+        }*/
     }
 
     /**
