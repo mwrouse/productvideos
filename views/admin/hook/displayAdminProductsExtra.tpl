@@ -32,6 +32,7 @@
                 <tr>
                     <th><strong>Title</strong></th>
                     <th><strong>URL</strong></th>
+                    <th class="text-center"><strong>Include in Images</strong></th>
                     <th></th>
                 </tr>
             </thead>
@@ -39,11 +40,14 @@
                 {foreach from=$videos item=video}
                     <tr>
                         <td>
-                            <input type="hidden" value="{$video.id_video}" class="video-id" />
-                            <input type="text" value="{$video.title}" class="form-control" name="video_titles[]"/>
+                            <input type="hidden" value="{$video.id}" name="video_ids[]"/>
+                            <input type="text" value="{$video.title}" class="form-control" name="{$video.id}_title"/>
                         </td>
                         <td>
-                            <input type="text" value="{$video.url}" class="form-control" name="video_urls[]"/>
+                            <input type="text" value="{$video.url}" class="form-control" name="{$video.id}_url"/>
+                        </td>
+                        <td class="text-center">
+                            <input type="checkbox" name="video_image_include[]" {if $video.included}checked{/if} value="{$video.id}"/>
                         </td>
                         <td class="delete">
                             <i class="process-icon-delete" title="{l s='Remove Video'}" onclick="deleteVideo(event)"></i>
@@ -69,6 +73,12 @@
 </div>
 
 <script type="text/javascript">
+    function uniqid(prefix = "", random = false) {
+        const sec = Date.now() * 1000 + Math.random() * 1000;
+        const id = sec.toString(16).replace(/\./g, "").padEnd(14, "0");
+        return prefix+id+(random ? Math.trunc(Math.random() * 100000000):"");
+    };
+
     function addNewProductVideo() {
         var container = document.getElementById('product-video-form');
         if (container == null) {
@@ -76,7 +86,9 @@
             return;
         }
 
-        var html = '<td><input type="text" value="" class="form-control" name="video_titles[]"/></td><td><input type="text" value="" class="form-control" name="video_urls[]"/></td><td class="delete"><i class="process-icon-delete" title="{l s="Remove Video"}" onclick="deleteVideo(event)"></i></td>';
+        var id = uniqid();
+
+        var html = '<td><input type="hidden" value="'+id+'" name="video_ids[]"/><input type="text" value="" class="form-control" name="'+id+'_title"/></td><td><input type="text" value="" class="form-control" name="'+id+'_url"/></td><td class="text-center"><input type="checkbox" name="video_image_include[]" value="'+id+'"/></td><td class="delete"><i class="process-icon-delete" title="{l s="Remove Video"}" onclick="deleteVideo(event)"></i></td>';
         var el = document.createElement('tr');
         el.innerHTML = html;
 

@@ -38,7 +38,8 @@ class ProductVideos extends Module
             'displayProductVideos',
             'displayProductTabContent',
             'displayAdminProductsExtra',
-            'actionProductUpdate'
+            'actionProductUpdate',
+            'actionAddVideosToImages'
         ];
 
         parent::__construct();
@@ -84,6 +85,47 @@ class ProductVideos extends Module
 
 
     /**
+     * Adds videos to the product images
+     */
+    public function hookActionAddVideosToImages($params)
+    {
+        $product = $params['product'];
+        $images = $params['images'];
+
+        if (!isset($product) || is_null($product) || !isset($images) || is_null($images))
+            return;
+
+        $attributes = [
+            [
+                'name' => 'height',
+                'value' => $params['height']
+            ]
+        ];
+
+        foreach ($images as $img) {
+            $img['is_video'] = false;
+        }
+
+        $videos = $this->getVideosForProduct($product->id, $attributes);
+        foreach ($videos as $video) {
+            if ($video['included']) {
+                $images[$video['id']] = [
+                    'cover' => 0,
+                    'legend' => $video['title'],
+                    'id_image' => $video['id'],
+                    'thumbnail' => $video['thumbnail_url'],
+                    'position' => count($images) + 1,
+                    'is_video' => true,
+                    'embed' => base64_encode($video['embed']),
+                ];
+            }
+        }
+
+        return serialize($images);
+    }
+
+
+    /**
      * Hook to add a tab to the product page (when editing a product)
      */
     public function hookDisplayAdminProductsExtra($params)
@@ -107,26 +149,25 @@ class ProductVideos extends Module
         {
             $productId = Tools::getValue('id_product');
 
-            $video_titles = Tools::getValue('video_titles');
-            $video_urls = Tools::getValue('video_urls');
+            $video_ids = Tools::getValue('video_ids');
+            //$video_titles = Tools::getValue('video_titles');
+            //$video_urls = Tools::getValue('video_urls');
+            $included_videos = Tools::getValue('video_image_include');
+
             $deleted_videos = Tools::getValue('deleted_videos');
+            $this->removeVideos($deleted_videos);
 
-            $this->removeVideos($productId);
-
-            if (!is_array($video_titles) || !is_array($video_urls))
-                return;
-
-            $max = count($video_titles);
-            if (count($video_urls) < $max)
-                $max = count($video_urls);
-
+            $max = count($video_ids);
             $saved = [];
 
             for ($i = 0; $i < $max; $i++)
             {
+                $id = $video_ids[$i];
                 $video = [
-                    'title' => $video_titles[$i],
-                    'url' => $video_urls[$i]
+                    'id' => $id,
+                    'title' => Tools::getValue($id.'_title'),
+                    'url' => Tools::getValue($id.'_url'),
+                    'included' => in_array($id, $included_videos) ? 1 : 0,
                 ];
                 array_push($saved, $video);
             }
@@ -139,13 +180,13 @@ class ProductVideos extends Module
     /**
      * Returns all videos for a product
      */
-    public function getVideosForProduct($productId)
+    public function getVideosForProduct($productId, $attributes = [])
     {
         if (is_null($productId))
             return [];
 
         $result = Db::getInstance()->ExecuteS('
-            SELECT `id_video`, `id_product`, `title`, `url` FROM `'._DB_PREFIX_.$this->table_name.'` WHERE `id_product`='.$productId.';
+            SELECT `id_video`, `id`, `id_product`, `title`, `url`, `included` FROM `'._DB_PREFIX_.$this->table_name.'` WHERE `id_product`='.$productId.';
         ');
 
         if (!$result)
@@ -153,7 +194,7 @@ class ProductVideos extends Module
 
         foreach ($result as $i => $video)
         {
-            $result[$i] = $this->addEmbeddCode($video);
+            $result[$i] = $this->addEmbeddCode($video, $attributes);
         }
 
         return $result;
@@ -171,10 +212,27 @@ class ProductVideos extends Module
                 Db::getInstance()->insert(
                     $this->table_name,
                     [
+                        'id' => $video['id'],
                         'id_product' => $productId,
                         'title' => pSQL($video['title']),
-                        'url' => $video['url']
+                        'url' => $video['url'],
+                        'included' => $video['included'],
                     ]
+                );
+            }
+            else {
+                Db::getInstance()->update(
+                    $this->table_name,
+                    [
+                        'id' => $video['id'],
+                        'id_product' => $productId,
+                        'title' => pSQL($video['title']),
+                        'url' => $video['url'],
+                        'included' => $video['included']
+                    ],
+
+                        'id="'.$video['id'].'"'
+
                 );
             }
         }
@@ -186,7 +244,7 @@ class ProductVideos extends Module
      */
     public function doesProductAlreadyHaveVideo($productId, $video)
     {
-        $doesURLExist = Db::getInstance()->getValue('SELECT id_video FROM '._DB_PREFIX_.$this->table_name.' WHERE (id_product='.$productId.') AND (url="'.$video['url'].'")');
+        $doesURLExist = Db::getInstance()->getValue('SELECT id_video FROM '._DB_PREFIX_.$this->table_name.' WHERE (id_product='.$productId.') AND (id="'.$video['id'].'")');
         if (!$doesURLExist)
             return false;
 
@@ -197,19 +255,19 @@ class ProductVideos extends Module
     /**
      * Removes all videos in the array
      */
-    public function removeVideos($productId)//$videoIds)
+    public function removeVideos($videoIds)
     {
-        Db::getInstance()->delete($this->table_name, 'id_product='.$productId);
-        /*if (!is_array($videoIds) || count($videoIds) == 0)
+        //Db::getInstance()->delete($this->table_name, 'id_product='.$productId);
+        if (!is_array($videoIds) || count($videoIds) == 0)
             return;
 
         foreach ($videoIds as $videoId)
         {
             Db::getInstance()->delete(
                 $this->table_name,
-                'id_video='.$videoId
+                'id="'.$videoId.'"'
             );
-        }*/
+        }
     }
 
     /**
@@ -231,7 +289,7 @@ class ProductVideos extends Module
     /**
      * Adds an embedded code for the video
      */
-    private function addEmbeddCode($video)
+    private function addEmbeddCode($video, $forcedAttributes = [])
     {
         if (!isset($this->MediaEmbed)) {
             $this->MediaEmbed = new MediaEmbed\MediaEmbed();
@@ -243,7 +301,13 @@ class ProductVideos extends Module
         foreach ($attributes as $attr) {
             $MediaObject->setAttribute($attr['name'], $attr['value']);
         }
+
+        foreach ($forcedAttributes as $attr) {
+            $MediaObject->setAttribute($attr['name'], $attr['value']);
+        }
+
         $video['embed'] = $MediaObject->getEmbedCode();
+        $video['thumbnail_url'] = $MediaObject->image();
         return $video;
     }
 
@@ -434,9 +498,11 @@ class ProductVideos extends Module
     {
         $sql = 'CREATE TABLE  `'._DB_PREFIX_.$this->table_name.'` (
                 `id_video` INT( 12 ) AUTO_INCREMENT,
+                `id` VARCHAR(255) NOT NULL,
                 `id_product` INT( 12 ) NOT NULL,
                 `title` VARCHAR( 255 ) NOT NULL,
                 `url` VARCHAR(1000) NOT NULL,
+                `included` BOOLEAN DEFAULT 0,
                 PRIMARY KEY (  `id_video` )
                 ) ENGINE =' ._MYSQL_ENGINE_;
 
