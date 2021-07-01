@@ -102,9 +102,10 @@ class ProductVideos extends Module
             ]
         ];
 
-        foreach ($images as $img) {
-            $img['is_video'] = false;
+        foreach ($images as $k => $v) {
+            $images[$k]['is_video'] = 0;
         }
+
 
         $videos = $this->getVideosForProduct($product->id, $attributes);
         foreach ($videos as $video) {
