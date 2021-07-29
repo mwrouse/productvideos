@@ -121,7 +121,7 @@ class ProductVideos extends Module
                 ];
             }
         }
-
+        //error_log(print_r($images, true));
         return serialize($images);
     }
 
@@ -158,6 +158,9 @@ class ProductVideos extends Module
             $deleted_videos = Tools::getValue('deleted_videos');
             $this->removeVideos($deleted_videos);
 
+            if (!is_array($video_ids))
+                return;
+                
             $max = count($video_ids);
             $saved = [];
 
@@ -192,13 +195,16 @@ class ProductVideos extends Module
 
         if (!$result)
             return [];
-
+        
+        $final = [];
         foreach ($result as $i => $video)
         {
-            $result[$i] = $this->addEmbeddCode($video, $attributes);
+            $v = $this->addEmbeddCode($video, $attributes);
+            if (!is_null($v))
+                array_push($final, $v);
         }
 
-        return $result;
+        return $final;
     }
 
 
@@ -297,6 +303,8 @@ class ProductVideos extends Module
         }
 
         $MediaObject = $this->MediaEmbed->parseUrl($video['url']);
+        if (is_null($MediaObject))
+            return null;
 
         $attributes = $this->getSavedAttributes();
         foreach ($attributes as $attr) {
